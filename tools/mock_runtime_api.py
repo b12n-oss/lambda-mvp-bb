@@ -6,8 +6,10 @@ response headers real Lambda sends), captures the runtime's POSTed
 responses, then answers 410 Gone so the runtime loop exits cleanly.
 Asserts one response per event and prints PASS/FAIL. Exit code 0/1.
 """
+import json
 import os
 import sys
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 HOST = "127.0.0.1"
@@ -60,6 +62,21 @@ def check_hello(responses):
         if "hello from Babashka" not in body:
             ok = False
             print("FAIL: response %d body missing greeting: %s" % (i, body))
+        try:
+            parsed = json.loads(body)
+        except ValueError as e:
+            ok = False
+            print("FAIL: response %d body is not valid JSON: %s (%s)" % (i, body, e))
+            continue
+        if parsed.get("warm_invocation") != i:
+            ok = False
+            print("FAIL: response %d warm_invocation expected %d, got %r" %
+                  (i, i, parsed.get("warm_invocation")))
+        want_request_id = "req-%d" % i
+        if parsed.get("request_id") != want_request_id:
+            ok = False
+            print("FAIL: response %d request_id expected %s, got %r" %
+                  (i, want_request_id, parsed.get("request_id")))
     return ok
 
 
@@ -71,7 +88,11 @@ def main():
         f.write(str(port))
     print("mock-runtime-api: listening on %s:%d, %d events" % (HOST, port, len(EVENTS)))
     try:
+        deadline = time.time() + 60
         while not state["done"]:
+            if time.time() > deadline:
+                print("mock-runtime-api: FAIL -- runtime never polled /invocation/next within 60s")
+                sys.exit(1)
             httpd.handle_request()
 
         ok = True

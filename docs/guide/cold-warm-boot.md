@@ -31,13 +31,13 @@ bb bench
 bb teardown   # when you're done -- nothing should keep running in your account
 ```
 
-Two things worth knowing before you run it. `bb bench` leaves the function configured at its last tier's memory size (3008 MB by default): a later `bb deploy` doesn't reset memory size (only the layer/code/role), so if you only ever run `bb bench` you're left on the higher-cost tier until you set it back yourself. And `bb deploy`/`bb bench`/`bb teardown` all act on whatever function/role/layer name is configured (`LAMBDA_MVP_FUNCTION_NAME`, default `lambda-mvp-bb`), so don't point it at an existing unrelated resource.
+Two things worth knowing before you run it. `bb bench` leaves the function configured at its last tier's memory size (3008 MB by default): a later `bb deploy` resets it back to 2048 MB, but if you only ever run `bb bench` you're left on the higher-cost tier until you set it back yourself. And `bb deploy`/`bb bench`/`bb teardown` all act on whatever function/role name is configured (`LAMBDA_MVP_FUNCTION_NAME`, default `lambda-mvp-bb`) — the runtime layer name stays fixed regardless — so don't point it at an existing unrelated resource.
 
 If a "cold" sample shows no Init Duration, `bb bench` prints a warning rather than silently reporting incomplete data.
 
 ## This project's own baseline
 
-Measured against a real deployment (`ap-southeast-2`, arm64, `provided.al2023`, account `REDACTED-AWS-ACCOUNT-ID`, 2026-09-13), via `bb bench` with the default tiers and sample count:
+Measured against a real deployment (`ap-southeast-2`, arm64, `provided.al2023`, 2026-09-13), via `bb bench` with the default tiers and sample count:
 
 | Metric | 2048 MB | 3008 MB |
 |---|---|---|

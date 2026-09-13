@@ -67,29 +67,38 @@
          :task (let [port-file ".mock-runtime-api-port"]
                  (fs/delete-if-exists port-file)
                  (let [mock (p/process ["python3" "tools/mock_runtime_api.py"] {:inherit true})]
-                   (loop [n 0]
-                     (when (and (not (fs/exists? port-file)) (< n 50))
-                       (Thread/sleep 100)
-                       (recur (inc n))))
-                   (if-not (fs/exists? port-file)
-                     (do (println "probe: mock server did not publish its port -- aborting")
-                         (System/exit 1))
-                     (let [port (str/trim (slurp port-file))
-                           bootstrap-clj (.getFile (io/resource "bootstrap.clj"))
-                           bb-proc (p/process ["bb" bootstrap-clj]
-                                              {:inherit true
-                                               :extra-env {"AWS_LAMBDA_RUNTIME_API" (str "127.0.0.1:" port)
-                                                           "_HANDLER" "net.b12n.lambda-mvp.handler/handler"}})
-                           mock-result (deref mock)]
-                       ;; blambda's bootstrap.clj has no non-200 check on /invocation/next
-                       ;; (unlike jlt/jnk/rst's hand-rolled loops), so once the mock's canned
-                       ;; events run out and it answers 410 to signal done, bootstrap.clj
-                       ;; crashes with an uncaught exception instead of exiting cleanly --
-                       ;; verified live, see the design spec. Success is judged from the
-                       ;; MOCK's own exit code, never bootstrap.clj's.
-                       (when (p/alive? bb-proc)
-                         (p/destroy-tree bb-proc))
-                       (System/exit (:exit mock-result))))))}
+                   (try
+                     (loop [n 0]
+                       (when (and (not (fs/exists? port-file)) (< n 50))
+                         (Thread/sleep 100)
+                         (recur (inc n))))
+                     (if-not (fs/exists? port-file)
+                       (do (println "probe: mock server did not publish its port -- aborting")
+                           (System/exit 1))
+                       (let [port (str/trim (slurp port-file))
+                             bootstrap-clj (str (fs/file (io/resource "bootstrap.clj")))
+                             bb-proc (p/process ["bb" bootstrap-clj]
+                                                {:inherit true
+                                                 :extra-env {"AWS_LAMBDA_RUNTIME_API" (str "127.0.0.1:" port)
+                                                             "_HANDLER" "net.b12n.lambda-mvp.handler/handler"}})
+                             mock-result (deref mock)]
+                         ;; blambda's bootstrap.clj has no non-200 check on /invocation/next
+                         ;; (unlike jlt/jnk/rst's hand-rolled loops), so once the mock's canned
+                         ;; events run out and it answers 410 to signal done, bootstrap.clj
+                         ;; crashes with an uncaught exception instead of exiting cleanly --
+                         ;; verified live, see the design spec. Success is judged from the
+                         ;; MOCK's own exit code, never bootstrap.clj's.
+                         (when (p/alive? bb-proc)
+                           (p/destroy-tree bb-proc))
+                         (System/exit (:exit mock-result))))
+                     ;; Safety net only -- normal completion always ends via System/exit
+                     ;; above, which halts the JVM before this finally would run. This
+                     ;; guards the case where something throws between starting the mock
+                     ;; and (deref mock), which would otherwise leave the mock process
+                     ;; orphaned and holding its port.
+                     (finally
+                       (when (p/alive? mock)
+                         (p/destroy-tree mock))))))}
 
   test {:doc "run script/bench.clj's unit tests"
         :task (p/shell "bb" "test/bench_test.clj")}
