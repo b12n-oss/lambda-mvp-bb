@@ -14,6 +14,8 @@ Every AWS-touching command in this repo relies entirely on the caller's own `aws
 
 **Want the full 5-way comparison across every sibling?** [Five-way comparison](five-way-comparison.md) pulls every sibling's own recorded numbers into one place, with the caveats each one's own docs already carry.
 
+**Want to contribute a change?** [Contributing](contributing.md) covers the build, the test commands, and this project's conventions.
+
 ## Guide map
 
 | Page | What you'll learn |
@@ -23,6 +25,7 @@ Every AWS-touching command in this repo relies entirely on the caller's own `aws
 | [Building the runtime layer](runtime-layer-build.md) | Why this project needs two artifacts and a Lambda Layer, unlike its siblings |
 | [Cold vs. warm boot](cold-warm-boot.md) | What `bb bench` measures and how to reproduce the comparison |
 | [Five-way comparison](five-way-comparison.md) | This project's numbers alongside all four siblings' |
+| [Contributing](contributing.md) | Build, test, and PR conventions |
 
 ## Find your scenario
 
@@ -32,6 +35,7 @@ Every AWS-touching command in this repo relies entirely on the caller's own `aws
 | "I want to understand how it works" | Architecture, then Building the runtime layer |
 | "I want to measure cold/warm boot time on my own account" | Getting started, then Cold vs. warm boot |
 | "I want to compare all five lambda-mvp-* runtimes" | Five-way comparison |
+| "I want to contribute a change" | Contributing |
 
 ## See also
 
