@@ -1,0 +1,18 @@
+;; Configuration for the documentation site, read by the docs-engine
+;; (https://github.com/jlt-commons/docs-engine).
+;;
+;; Build it locally with `bb site:build`/`bb site:serve` (added in
+;; Phase 4 once the CI workflow that also uses it exists). CI builds
+;; it on every push and pull request from .github/workflows/site.yml,
+;; and publishes from main: the PUBLISH_SITE repository variable is
+;; "true" and GitHub Pages is enabled.
+{;; :base-path is what makes this a project site rather than an org
+ ;; one. The site is served at
+ ;; https://b12n-oss.github.io/lambda-mvp-bb/, so every URL the engine
+ ;; emits needs that prefix. Leave it out and the pages still render,
+ ;; but each one loads the ORGANIZATION site's stylesheet and every
+ ;; asset 404s.
+ :base-path   "/lambda-mvp-bb"
+
+ :title       "lambda-mvp-bb"
+ :description "A shareable AWS Lambda custom runtime in Babashka via blambda, with a bb bench tool for reproducing a cold-vs-warm boot-time comparison against your own AWS account."}
