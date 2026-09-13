@@ -56,4 +56,13 @@
         :task (p/shell "bb" "test/bench_test.clj")}
 
   bench {:doc "cold/warm boot-time comparison across memory tiers"
-         :task (p/shell "bb" "script/bench_run.clj")}}}
+         :task (p/shell "bb" "script/bench_run.clj")}
+
+  deploy {:doc "idempotent: publish the runtime layer, create/update the IAM role + Lambda function"
+          :task (p/shell "bb" "script/aws_lifecycle.clj" "deploy")}
+
+  invoke {:doc "single ad-hoc invoke, prints response + REPORT line"
+          :task (p/shell "bb" "script/aws_lifecycle.clj" "invoke")}
+
+  teardown {:doc "delete the function, role, and every published layer version"
+            :task (p/shell "bb" "script/aws_lifecycle.clj" "teardown")}}}
