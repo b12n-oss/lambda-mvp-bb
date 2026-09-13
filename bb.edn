@@ -1,0 +1,22 @@
+{:paths ["src"]
+ :deps {net.jmglov/blambda
+        {:git/url "https://github.com/jmglov/blambda.git"
+         :git/tag "v0.2.0"
+         :git/sha "fa394bb"}}
+ :tasks
+ {:requires ([blambda.cli :as blambda]
+             [babashka.process :as p])
+
+  blambda {:doc "Controls Blambda runtime and layers"
+           :task (blambda/dispatch
+                  {:lambda-name "lambda-mvp-bb"
+                   :source-files ["net/b12n/lambda_mvp/handler.clj"]
+                   :bb-arch (or (System/getenv "LAMBDA_ARCH") "arm64")
+                   :runtime-layer-name "lambda-mvp-bb-runtime"})}
+
+  build {:doc "bb blambda build-runtime-layer + build-lambda -> two zips in target/"
+         :task (do (p/shell "bb" "blambda" "build-runtime-layer")
+                   (p/shell "bb" "blambda" "build-lambda"))}
+
+  clean {:doc "remove build artifacts"
+         :task (p/shell "rm" "-rf" "target" ".work")}}}

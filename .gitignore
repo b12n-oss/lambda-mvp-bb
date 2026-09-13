@@ -1,0 +1,11 @@
+target/
+.work/
+dist/
+*.zip
+.DS_Store
+.mock-runtime-api-port
+_site/
+.cpcache/
+.jolt/
+AGENTS.md
+CLAUDE.md
