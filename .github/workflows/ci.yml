@@ -1,0 +1,35 @@
+name: CI
+
+# Offline-safe gate: bb test and bb probe both need no AWS account and
+# no Docker. Babashka is the only toolchain requirement here -- unlike
+# jlt/jnk/rst, there's no separate compiler to install (jolt/jank),
+# since Babashka interprets the handler at cold start rather than
+# compiling it ahead of time. That's also why this project can run
+# BOTH bb test and bb probe in CI, where jnk currently runs only
+# bb test (its own probe needs the jank toolchain, a heavier install)
+# and jlt/rst run neither.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: DeLaGuardo/setup-clojure@13.6.1
+        with:
+          bb: 1.12.196
+
+      - name: Test (script/bench.clj's unit tests)
+        run: bb test
+
+      - name: Probe (offline e2e: mock Runtime API + blambda's real bootstrap.clj loop)
+        run: bb probe
