@@ -50,4 +50,7 @@
                        ;; MOCK's own exit code, never bootstrap.clj's.
                        (when (p/alive? bb-proc)
                          (p/destroy-tree bb-proc))
-                       (System/exit (:exit mock-result))))))}}}
+                       (System/exit (:exit mock-result))))))}
+
+  test {:doc "run script/bench.clj's unit tests"
+        :task (p/shell "bb" "test/bench_test.clj")}}}
