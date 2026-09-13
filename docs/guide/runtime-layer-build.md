@@ -58,8 +58,8 @@ This project is the only one of the five whose cold-start path includes
 mounting a Lambda Layer before the handler namespace is even resolved.
 Whether that shows up as measurably different `Init Duration` compared
 to the self-contained-zip siblings is exactly the kind of question
-[Five-way comparison](five-way-comparison.md) exists to surface, once
-this project has a real bench run.
+[Five-way comparison](five-way-comparison.md) exists to surface, and
+this project's real bench run now answers it.
 
 ## See also
 

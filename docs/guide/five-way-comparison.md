@@ -43,8 +43,8 @@ doesn't re-derive anything:**
   2026-09-13.
 - `cljs`: `lambda-mvp-cljs/docs/guide/cold-warm-boot.md`, measured
   same AWS account, `ap-southeast-2`, 2026-09-12 (that page's own table
-  is itself a 3-way jolt/jank/cljs comparison; the jolt/jank columns
-  quoted here are cljs's own citations of jlt's and jnk's numbers).
+  is itself a 3-way jolt/jank/cljs comparison, cited here for its own
+  cljs numbers only).
 - `jlt`: `lambda-mvp-jlt/docs/guide/cold-warm-boot.md`, "This repo's
   own baseline" table, `ap-southeast-2` column specifically (jlt's own
   page also has a `us-west-2` column and a separate jolt-version
@@ -100,6 +100,6 @@ doesn't re-derive anything:**
 ## See also
 
 - [Cold vs. warm boot](cold-warm-boot.md): this project's own
-  methodology and (once measured) its own baseline table.
+  methodology and its own baseline table.
 - [Building the runtime layer](runtime-layer-build.md): the
   architectural difference this page's caveats reference.

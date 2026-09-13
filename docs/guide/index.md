@@ -10,7 +10,7 @@ Every AWS-touching command in this repo relies entirely on the caller's own `aws
 
 **Wondering why this is the only sibling with a Lambda Layer?** [Building the runtime layer](runtime-layer-build.md) covers the `/opt` constraint blambda's shipped `bootstrap` script hardcodes, why that rules out a single self-contained zip, and the two-artifact build it takes instead.
 
-**Want to understand or reproduce the cold/warm boot-time story?** [Cold vs. warm boot](cold-warm-boot.md) is the reason this project exists: what `bb bench` measures, how to read the table it prints, and this project's own numbers once they've been measured.
+**Want to understand or reproduce the cold/warm boot-time story?** [Cold vs. warm boot](cold-warm-boot.md) is the reason this project exists: what `bb bench` measures, how to read the table it prints, and this project's own measured numbers.
 
 **Want the full 5-way comparison across every sibling?** [Five-way comparison](five-way-comparison.md) pulls every sibling's own recorded numbers into one place, with the caveats each one's own docs already carry.
 

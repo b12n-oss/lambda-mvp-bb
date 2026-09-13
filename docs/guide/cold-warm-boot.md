@@ -50,5 +50,5 @@ As with every sibling's own recorded table: **illustrative, not a live guarantee
 
 ## See also
 
-- [Five-way comparison](five-way-comparison.md): this project's numbers alongside all four siblings', once measured.
+- [Five-way comparison](five-way-comparison.md): this project's numbers alongside all four siblings'.
 - [Building the runtime layer](runtime-layer-build.md): the two-artifact build this project's cold start goes through.

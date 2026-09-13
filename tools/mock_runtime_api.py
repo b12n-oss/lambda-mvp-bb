@@ -3,8 +3,11 @@
 
 Serves N canned events on GET /runtime/invocation/next (with the same
 response headers real Lambda sends), captures the runtime's POSTed
-responses, then answers 410 Gone so the runtime loop exits cleanly.
-Asserts one response per event and prints PASS/FAIL. Exit code 0/1.
+responses, then answers 410 Gone. blambda's bootstrap.clj has no
+non-200 check on this endpoint, so this makes the runtime process
+crash -- by design; success here is judged from THIS SCRIPT's own exit
+code, not the runtime process's. Asserts one response per event and
+prints PASS/FAIL. Exit code 0/1.
 """
 import json
 import os
