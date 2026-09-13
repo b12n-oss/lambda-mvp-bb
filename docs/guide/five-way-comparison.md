@@ -21,26 +21,26 @@ sample and several warm ones, at `2048`/`3008` MB by default.
 
 | Metric | bb (Babashka) | cljs (Node.js) | jlt (Jolt) | jnk (jank) | rst (Jolt+Rust) |
 |---|---|---|---|---|---|
-| Cold Init Duration | not yet measured | 104.6 ms | 288.3 ms | 510.3 ms | 295.4 ms |
-| Cold Duration | not yet measured | 4.1 ms | 2.1 ms | 1.7 ms | 2.1 ms |
-| Warm Duration (median) | not yet measured | 1.7 ms | 1.8 ms | 1.4 ms | 1.9 ms |
-| Max Memory Used | not yet measured | 81 MB | 164 MB | 26 MB | 168 MB |
+| Cold Init Duration | 380.7 ms | 104.6 ms | 288.3 ms | 510.3 ms | 295.4 ms |
+| Cold Duration | 7.7 ms | 4.1 ms | 2.1 ms | 1.7 ms | 2.1 ms |
+| Warm Duration (median) | 1.8 ms | 1.7 ms | 1.8 ms | 1.4 ms | 1.9 ms |
+| Max Memory Used | 102 MB | 81 MB | 164 MB | 26 MB | 168 MB |
 
 ## At 3008 MB
 
 | Metric | bb (Babashka) | cljs (Node.js) | jlt (Jolt) | jnk (jank) | rst (Jolt+Rust) |
 |---|---|---|---|---|---|
-| Cold Init Duration | not yet measured | 109.0 ms | 401.9 ms | 64.0 ms | 304.8 ms |
-| Cold Duration | not yet measured | 4.4 ms | 3.0 ms | 1.5 ms | 2.0 ms |
-| Warm Duration (median) | not yet measured | 1.7 ms | 2.2 ms | 1.3 ms | 1.9 ms |
-| Max Memory Used | not yet measured | 83 MB | 164 MB | 26 MB | 168 MB |
+| Cold Init Duration | 368.6 ms | 109.0 ms | 401.9 ms | 64.0 ms | 304.8 ms |
+| Cold Duration | 7.0 ms | 4.4 ms | 3.0 ms | 1.5 ms | 2.0 ms |
+| Warm Duration (median) | 1.7 ms | 1.7 ms | 2.2 ms | 1.3 ms | 1.9 ms |
+| Max Memory Used | 104 MB | 83 MB | 164 MB | 26 MB | 168 MB |
 
 **Sources, exactly as recorded in each project's own doc — this page
 doesn't re-derive anything:**
 
-- `bb`: not yet measured. This sandbox has no AWS credentials
-  configured. Fill in from `lambda-mvp-bb`'s own
-  `docs/guide/cold-warm-boot.md` once a real `bb bench` run exists.
+- `bb`: `lambda-mvp-bb/docs/guide/cold-warm-boot.md`, "This project's
+  own baseline" table, `ap-southeast-2`, arm64, `provided.al2023`,
+  2026-09-13.
 - `cljs`: `lambda-mvp-cljs/docs/guide/cold-warm-boot.md`, measured
   same AWS account, `ap-southeast-2`, 2026-09-12 (that page's own table
   is itself a 3-way jolt/jank/cljs comparison; the jolt/jank columns
@@ -76,9 +76,20 @@ doesn't re-derive anything:**
   measured binary is real and the numbers reflect what actually
   deploys today.
 - **bb is the only sibling with a Lambda Layer in its cold-start
-  path.** See [Building the runtime layer](runtime-layer-build.md) for
-  why, and whether that shows up as a measurable difference once this
-  project has real numbers.
+  path, and its own Cold Duration numbers stand out.** Cold Init
+  Duration (mounting the layer, starting `bb`, interpreting
+  `bootstrap.clj`) lands in the middle of the pack — 368-381 ms,
+  between cljs's ~105-109 ms and jnk's 2048 MB figure of 510 ms. But
+  **Cold Duration** (the handler's own execution time) is
+  consistently the highest of the five at both tiers — 7.0-7.7 ms,
+  versus 1.5-4.4 ms for every other sibling. bb is the only one of
+  the five whose handler is interpreted (via Babashka's SCI) rather
+  than AOT-compiled or JIT-warmed ahead of the first request, which
+  is a plausible explanation, though this single run isn't enough to
+  separate that from measurement noise or the layer-mount overhead
+  bleeding into the handler's own timing. See
+  [Building the runtime layer](runtime-layer-build.md) for the
+  mechanism.
 - **None of these numbers are a live guarantee.** Every source doc says
   the same thing: a single run each, on one account, one region, one
   day. The spread between projects (down to ~1.3 ms warm, cold init

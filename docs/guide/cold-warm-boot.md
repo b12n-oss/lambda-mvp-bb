@@ -37,24 +37,16 @@ If a "cold" sample shows no Init Duration, `bb bench` prints a warning rather th
 
 ## This project's own baseline
 
-**Not yet measured.** This sandbox has no AWS credentials configured, so this table hasn't been filled in yet. Run:
-
-```sh
-bb deploy
-bb bench
-bb teardown
-```
-
-against your own account and paste the printed table here, in this exact shape (matching every other sibling's own recorded table):
+Measured against a real deployment (`ap-southeast-2`, arm64, `provided.al2023`, account `REDACTED-AWS-ACCOUNT-ID`, 2026-09-13), via `bb bench` with the default tiers and sample count:
 
 | Metric | 2048 MB | 3008 MB |
 |---|---|---|
-| Cold Init Duration | not yet measured | not yet measured |
-| Cold Duration | not yet measured | not yet measured |
-| Warm Duration (min/median/max) | not yet measured | not yet measured |
-| Max Memory Used | not yet measured | not yet measured |
+| Cold Init Duration | 380.7 ms | 368.6 ms |
+| Cold Duration | 7.7 ms | 7.0 ms |
+| Warm Duration (min/median/max) | 1.7 / 1.8 / 1.8 ms | 1.7 / 1.7 / 1.9 ms |
+| Max Memory Used | 102 MB | 104 MB |
 
-Include the region, architecture, and date you measured against, the same way `lambda-mvp-jlt`'s and `lambda-mvp-rst`'s own `cold-warm-boot.md` pages do — a number with no measurement context is a number nobody can trust or reproduce.
+As with every sibling's own recorded table: **illustrative, not a live guarantee** — a single run, on one account, one region, one day. Your numbers will differ by account, region, and the hardware allocation AWS happens to give you. Run `bb bench` for your own.
 
 ## See also
 

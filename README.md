@@ -95,12 +95,10 @@ and warm-sample count are overridable via `BENCH_MEMORY_TIERS` (default
 ## Cold vs. warm boot time
 
 See [`docs/guide/cold-warm-boot.md`](docs/guide/cold-warm-boot.md) for
-what `bb bench` measures and how to read the table it prints, and
+what `bb bench` measures, how to read the table it prints, and this
+project's own measured numbers, and
 [`docs/guide/five-way-comparison.md`](docs/guide/five-way-comparison.md)
-for how this project's numbers sit alongside the other four
-`lambda-mvp-*` siblings' — once this project has a real bench run
-against a live AWS account (this repo's own scaffolding session had
-none configured).
+for how they sit alongside the other four `lambda-mvp-*` siblings'.
 
 ## Extension points
 
