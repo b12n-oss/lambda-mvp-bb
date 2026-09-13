@@ -95,11 +95,20 @@
     (when-not (zero? exit) (die! "publish-layer-version failed:" err))
     (str/trim out)))
 
-(defn- layer-version-numbers []
-  (let [{:keys [exit out]} (sh "aws" "lambda" "list-layer-versions"
-                               "--layer-name" runtime-layer-name
-                               "--query" "LayerVersions[].Version" "--output" "json")]
-    (if (zero? exit) (json/parse-string out) [])))
+(defn- layer-version-numbers
+  "Empty when the layer has never been published (list-layer-versions
+  returns ResourceNotFoundException in that case, not an empty 200 --
+  verified against AWS's own API docs). Any OTHER failure is real and
+  must not be silently treated the same way, or teardown! would claim
+  success while leaving orphaned layer versions behind."
+  []
+  (let [{:keys [exit out err]} (sh "aws" "lambda" "list-layer-versions"
+                                   "--layer-name" runtime-layer-name
+                                   "--query" "LayerVersions[].Version" "--output" "json")]
+    (cond
+      (zero? exit) (json/parse-string out)
+      (str/includes? (or err "") "ResourceNotFoundException") []
+      :else (die! "list-layer-versions failed:" err))))
 
 (defn- function-exists? []
   (zero? (:exit (sh "aws" "lambda" "get-function" "--function-name" function-name))))
