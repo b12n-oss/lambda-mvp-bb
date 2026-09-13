@@ -10,14 +10,13 @@ name: Site
 # choosing it.
 #
 # The deploy job is gated on the PUBLISH_SITE repository variable (set
-# to "true") and GitHub Pages being enabled on this repo. Neither is
-# the case as of this project's initial scaffold -- flip both when
-# ready to publish.
+# to "true") and GitHub Pages being enabled on this repo. Both are set
+# as of this repo going public.
 
-# workflow_dispatch only while this repo is private -- push/pull_request
-# would spend billed Actions minutes on every commit. Restored when the
-# repo goes public (see the prepare-for-open-source skill's Phase B).
 on:
+  push:
+    branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
