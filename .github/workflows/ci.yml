@@ -32,5 +32,5 @@ jobs:
       - name: Test (script/bench.clj's unit tests)
         run: bb test
 
-      - name: Probe (offline e2e: mock Runtime API + blambda's real bootstrap.clj loop)
+      - name: "Probe (offline e2e: mock Runtime API + blambda's real bootstrap.clj loop)"
         run: bb probe
