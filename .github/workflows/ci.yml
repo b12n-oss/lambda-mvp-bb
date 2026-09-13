@@ -9,10 +9,10 @@ name: CI
 # bb test (its own probe needs the jank toolchain, a heavier install)
 # and jlt/rst run neither.
 
+# workflow_dispatch only while this repo is private -- push/pull_request
+# would spend billed Actions minutes on every commit. Restored when the
+# repo goes public (see the prepare-for-open-source skill's Phase B).
 on:
-  push:
-    branches: [main]
-  pull_request:
   workflow_dispatch:
 
 permissions:
