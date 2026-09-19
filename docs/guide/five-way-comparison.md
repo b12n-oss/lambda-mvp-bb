@@ -17,6 +17,13 @@ same `bb bench`/`jolt bench` methodology: force a fresh execution
 environment via `update-function-configuration`, measure one cold
 sample and several warm ones, at `2048`/`3008` MB by default.
 
+There are two rounds on this page. The first, immediately below, was
+assembled in September 2026 by transcribing each project's own recorded
+table, measured on 2026-09-12 or 2026-09-13. The second,
+[further down](#a-second-round-all-five-on-one-day-2026-09-19), re-measured
+all five on a single day, 2026-09-19, after jolt released v0.8.9. Both are
+kept so the family's numbers read as a progression.
+
 ## At 2048 MB
 
 | Metric | bb (Babashka) | cljs (Node.js) | jlt (Jolt) | jnk (jank) | rst (Jolt+Rust) |
@@ -57,6 +64,75 @@ doesn't re-derive anything:**
   same doc was retracted as mislabeled and is not cited here), jolt
   v0.8.7, arm64, `ap-southeast-2`, 2026-09-12.
 
+## A second round, all five on one day (2026-09-19)
+
+The two tables above stay as first recorded. This round was triggered by jolt
+releasing v0.8.9 on 2026-09-18, and rather than update only the two Jolt-based
+siblings, all five were re-measured against the same account and region
+(`ap-southeast-2`) on 2026-09-19, so the columns are same-day for once.
+
+### At 2048 MB
+
+| Metric | bb (Babashka) | cljs (Node.js) | jlt (Jolt 0.8.9) | jnk (jank) | rst (Jolt 0.8.9+Rust) |
+|---|---|---|---|---|---|
+| Cold Init Duration | 397.6 ms | 110.9 ms | 361.6 ms | 615.4 ms | 470.7 ms |
+| Cold Duration | 8.1 ms | 4.2 ms | 1.8 ms | 1.7 ms | 2.3 ms |
+| Warm Duration (median) | 1.9 ms | 1.7 ms | 1.7 ms | 1.4 ms | 1.9 ms |
+| Max Memory Used | 104 MB | 81 MB | 182 MB | 26 MB | 187 MB |
+
+### At 3008 MB
+
+| Metric | bb (Babashka) | cljs (Node.js) | jlt (Jolt 0.8.9) | jnk (jank) | rst (Jolt 0.8.9+Rust) |
+|---|---|---|---|---|---|
+| Cold Init Duration | 370.8 ms | 106.2 ms | 346.1 ms | 61.3 ms | 365.0 ms |
+| Cold Duration | 8.2 ms | 4.1 ms | 1.9 ms | 1.6 ms | 2.3 ms |
+| Warm Duration (median) | 1.8 ms | 1.6 ms | 1.7 ms | 1.5 ms | 1.8 ms |
+| Max Memory Used | 104 MB | 82 MB | 182 MB | 26 MB | 187 MB |
+
+**Read the sampling difference before comparing columns.** `jlt` and `rst`
+are the median of three `bench` runs per tier, because the jolt version bump
+was the reason for the round and Cold Init is too noisy to call from one
+sample. `bb`, `cljs` and `jnk` are a single run each, the same methodology
+their own tables above used. So the two Jolt columns are steadier numbers than
+the other three by construction, not by merit.
+
+### What moved since the first round
+
+**The three non-Jolt siblings barely moved**, which is the useful part. bb's
+Cold Init came within 5% at both tiers, 4.4% at 2048 MB and 0.6% at 3008 MB,
+and its Max Memory within 2 MB.
+cljs moved about 6% at 2048 MB and 3% at 3008 MB. jnk reproduced its own
+order effect exactly, 615.4 ms at 2048 MB against 61.3 ms at 3008 MB, the same
+ECR-layer-caching artifact its own doc already explains. Since nothing in
+those three projects changed between the rounds, that spread is a fair
+estimate of the run-to-run noise floor on this account.
+
+**Both Jolt siblings gained about 11% in resident memory.** jlt went 164 to
+182 MB and rst went 168 to 187 MB, holding steady across every run. Both
+binaries grew roughly 12% alongside it. That is jolt v0.8.9's own change, and
+the fact that it shows up identically on a binary with Rust FFI and one
+without is what makes it attributable to the runtime rather than to either
+project.
+
+**Warm time improved on both Jolt siblings, and jlt's handler time improved
+clearly.** jlt's Cold Duration dropped from 2.3 to 1.8 ms at 2048 MB with
+almost no overlap between the two versions' samples. rst's Cold Duration is a
+wash, plausibly because its Rust builder work sits in the same few
+milliseconds. Neither project showed a Cold Init improvement that three runs
+per tier could separate from noise. Each project's own doc carries the full
+per-version tables:
+[jlt](https://github.com/b12n-oss/lambda-mvp-jlt/blob/main/docs/guide/cold-warm-boot.md)
+and
+[rst](https://github.com/b12n-oss/lambda-mvp-rst/blob/main/docs/guide/cold-warm-boot.md).
+
+**Sources for this round:** measured directly by running each project's own
+`bench` task against one account in `ap-southeast-2` on 2026-09-19, rather
+than transcribed from the five separate docs the way the first round was.
+jlt and rst ran at `JOLT_VERSION=0.8.9`, which is now both repos' default.
+jnk built from the current jank package (`0.1-noble`), which its Dockerfile
+installs unpinned from the PPA, so its build is not version-controlled the way
+the Jolt pair's is.
+
 ## Caveats, carried forward from each project's own docs rather than re-derived
 
 - **jnk's numbers aren't directly comparable to the four zip-based
@@ -66,15 +142,14 @@ doesn't re-derive anything:**
   measurement, and that the surprising "3008 MB colder than 2048 MB"
   result in its own table is attributed to ECR image-layer caching
   order, not memory size.
-- **rst currently depends on a not-yet-merged upstream PR.** Per your
-  own framing: `lambda-mvp-rst`'s Rust JSON-builder capability
-  (`jolt-diplomat`'s builder API) lives on a public fork branch
-  (`burinc/jolt-diplomat`, `feat/json-builder-api`), vendored in via
-  `bb vendor`, pending a PR against `jolt-lang/jolt-diplomat` upstream.
-  This is noted here as **pending, expected to be open-sourced
-  shortly** — not treated as a defect in the comparison, since the
-  measured binary is real and the numbers reflect what actually
-  deploys today.
+- **rst's upstream dependency has landed.** `lambda-mvp-rst`'s Rust
+  JSON-builder capability (`jolt-diplomat`'s builder API) was developed
+  on a public fork branch (`burinc/jolt-diplomat`,
+  `feat/json-builder-api`) and vendored in via `bb vendor`. That branch
+  was **merged into `jolt-lang/jolt-diplomat` on 2026-09-14**, so the
+  "pending upstream PR" caveat this bullet used to carry no longer
+  applies. `lambda-mvp-rst` still vendors its snapshot rather than
+  pinning a git ref, which is now a cleanup its own README tracks.
 - **bb is the only sibling with a Lambda Layer in its cold-start
   path, and its own Cold Duration numbers stand out.** Cold Init
   Duration (mounting the layer, starting `bb`, interpreting

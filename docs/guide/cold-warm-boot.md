@@ -48,6 +48,28 @@ Measured against a real deployment (`ap-southeast-2`, arm64, `provided.al2023`, 
 
 As with every sibling's own recorded table: **illustrative, not a live guarantee** — a single run, on one account, one region, one day. Your numbers will differ by account, region, and the hardware allocation AWS happens to give you. Run `bb bench` for your own.
 
+### A second run, 2026-09-19
+
+The table above stays as recorded. This one is a fresh `bb bench` against the
+same account and region six days later, taken while the `lambda-mvp-*` family
+was re-measured together after jolt shipped v0.8.9. Nothing about this project
+changed between the two runs, so the gap between them is a useful read on how
+much of any sibling's movement is just AWS:
+
+| Metric | 2048 MB | 3008 MB |
+|---|---|---|
+| Cold Init Duration | 397.6 ms | 370.8 ms |
+| Cold Duration | 8.1 ms | 8.2 ms |
+| Warm Duration (min/median/max) | 1.8 / 1.9 / 2.0 ms | 1.8 / 1.8 / 2.1 ms |
+| Max Memory Used | 104 MB | 104 MB |
+
+Cold Init landed within 5% of the 2026-09-13 figures at both tiers (4.4% at
+2048 MB, 0.6% at 3008 MB) and
+Max Memory Used within 2 MB, which is the reassuring outcome. Cold Duration
+sat slightly higher, 8.1-8.2 ms against 7.0-7.7 ms, still the highest of the
+five siblings and still consistent with the interpreted-handler explanation
+the [five-way comparison](five-way-comparison.md) gives.
+
 ## See also
 
 - [Five-way comparison](five-way-comparison.md): this project's numbers alongside all four siblings'.
