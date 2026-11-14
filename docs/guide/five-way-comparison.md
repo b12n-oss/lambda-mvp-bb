@@ -1,7 +1,8 @@
-# Five-way comparison: cold vs. warm boot across the lambda-mvp-* family
+# Cold vs. warm boot across the lambda-mvp-* family
 
-Five ways to run a Lambda function that greets you, echoes your event,
-and counts warm invocations:
+Seven ways to run a Lambda function that greets you, echoes your event,
+and counts warm invocations. The page started with five, and the last two
+joined in November 2026:
 
 | Project | Language / runtime | Deploy shape |
 |---|---|---|
@@ -10,19 +11,23 @@ and counts warm invocations:
 | [`lambda-mvp-jlt`](https://github.com/b12n-oss/lambda-mvp-jlt) | Jolt (native Clojure/Chez Scheme) | Custom runtime, single self-contained zip |
 | [`lambda-mvp-jnk`](https://github.com/b12n-oss/lambda-mvp-jnk) | jank (native Clojure/LLVM) | Custom runtime, **container image** (not a zip) |
 | [`lambda-mvp-rst`](https://github.com/b12n-oss/lambda-mvp-rst) | Jolt + a Rust JSON builder via jolt-diplomat/FFI | Custom runtime, single self-contained zip |
+| [`lambda-mvp-cljrfc`](https://github.com/b12n-oss/lambda-mvp-cljrfc) | ClojureScript compiled by Clojurific (ES modules, Vite) | Managed `nodejs24.x` runtime, single zip |
+| [`lambda-mvp-glj`](https://github.com/b12n-oss/lambda-mvp-glj) | Glojure (Clojure hosted on Go), AOT-compiled | Custom runtime, one static binary in a zip |
 
-All five expose the same response shape
+All seven expose the same response shape
 (`message`/`runtime`/`request_id`/`warm_invocation`/`event`) and the
 same `bb bench`/`jolt bench` methodology: force a fresh execution
 environment via `update-function-configuration`, measure one cold
 sample and several warm ones, at `2048`/`3008` MB by default.
 
-There are two rounds on this page. The first, immediately below, was
+There are three rounds on this page. The first, immediately below, was
 assembled in September 2026 by transcribing each project's own recorded
 table, measured on 2026-09-12 or 2026-09-13. The second,
 [further down](#a-second-round-all-five-on-one-day-2026-09-19), re-measured
-all five on a single day, 2026-09-19, after jolt released v0.8.9. Both are
-kept so the family's numbers read as a progression.
+all five on a single day, 2026-09-19, after jolt released v0.8.9. The
+[third](#a-third-round-2026-11-14-two-new-siblings) measured the two new
+siblings on 2026-11-14 next to cljs and jlt. All three are kept so the
+family's numbers read as a progression.
 
 ## At 2048 MB
 
@@ -132,6 +137,61 @@ jlt and rst ran at `JOLT_VERSION=0.8.9`, which is now both repos' default.
 jnk built from the current jank package (`0.1-noble`), which its Dockerfile
 installs unpinned from the PPA, so its build is not version-controlled the way
 the Jolt pair's is.
+
+## A third round, 2026-11-14: two new siblings
+
+lambda-mvp-cljrfc and lambda-mvp-glj were built on 2026-11-14 and benched the
+same day, in the same account and region (`ap-southeast-2`), next to fresh runs
+of cljs and jlt. bb, jnk and rst weren't re-run, so their latest numbers are
+still the second round's. Every figure below is the median of three `bench`
+runs, all within about an hour of each other.
+
+### At 2048 MB
+
+| Metric | cljs (shadow-cljs) | cljrfc (Clojurific) | jlt (Jolt 0.8.27) | glj (Glojure) |
+|---|---|---|---|---|
+| Cold Init Duration | 134.7 ms | 184.4 ms | 477.1 ms | 102.1 ms |
+| Cold Duration | 4.9 ms | 3.4 ms | 2.2 ms | 3.6 ms |
+| Warm Duration (median) | 1.8 ms | 1.8 ms | 2.0 ms | 1.2 ms |
+| Max Memory Used | 77 MB | 81 MB | 128 MB | 28 MB |
+
+### At 3008 MB
+
+| Metric | cljs (shadow-cljs) | cljrfc (Clojurific) | jlt (Jolt 0.8.27) | glj (Glojure) |
+|---|---|---|---|---|
+| Cold Init Duration | 135.3 ms | 149.5 ms | 349.3 ms | 103.0 ms |
+| Cold Duration | 5.0 ms | 3.8 ms | 1.9 ms | 3.8 ms |
+| Warm Duration (median) | 1.9 ms | 1.6 ms | 1.7 ms | 1.2 ms |
+| Max Memory Used | 77 MB | 82 MB | 128 MB | 28 MB |
+
+### What the new siblings show
+
+**cljrfc pairs with cljs.** The two have the same handler, runtime and scripts,
+and only the compiler differs, which makes them the one controlled pair in the
+family. Clojurific's bundle is 347 KB against shadow-cljs's 105 KB, and its
+Cold Init was 15 to 50 ms slower, with no overlap between the two sets of cold
+samples. Its handler ran about a third faster on the first call. Lambda bills
+Init, so a cold Clojurific invoke ends up slightly dearer.
+
+**glj had the fastest cold start and the smallest footprint of the four.** Its
+Cold Init stayed between 80 and 104 ms across six samples, and Max Memory Used
+held at 28 MB, near the 26 MB jank recorded in September. It's a custom runtime
+on `provided.al2023` like jlt, but the bootstrap is a static Go binary with no
+Scheme heap to load.
+
+**jlt moved to Jolt 0.8.27 built on jolt's own patched Chez.** Max Memory Used
+fell from 182 MB in the second round to 128 MB. Cold Init didn't measurably
+change, and jlt's guide has the three-build comparison behind that.
+
+cljs's Cold Init medians came out 20 to 30 ms higher than its second-round
+figures, with no code change. Compare columns within a round, not across them.
+
+**Sources for this round:** each project's own `bench` task, run against one
+account in `ap-southeast-2` on 2026-11-14. Ranges and per-run tables are in
+[cljrfc's](https://github.com/b12n-oss/lambda-mvp-cljrfc/blob/main/docs/guide/cold-warm-boot.md),
+[glj's](https://github.com/b12n-oss/lambda-mvp-glj/blob/main/docs/guide/cold-warm-boot.md)
+and [jlt's](https://github.com/b12n-oss/lambda-mvp-jlt/blob/main/docs/guide/cold-warm-boot.md)
+guides.
 
 ## Caveats, carried forward from each project's own docs rather than re-derived
 
