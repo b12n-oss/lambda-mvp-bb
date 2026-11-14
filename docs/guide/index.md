@@ -1,8 +1,8 @@
 # lambda-mvp-bb, User guide
 
-`lambda-mvp-bb` runs [Babashka](https://babashka.org) on AWS Lambda as a **custom runtime**, via [blambda](https://github.com/jmglov/blambda) (which wraps [bb-lambda](https://github.com/tatut/bb-lambda)'s Runtime API loop). Unlike this family's other custom-runtime siblings, nothing here is compiled ahead of time: the handler namespace is `require`d and interpreted at cold start by Babashka's own SCI interpreter. On top of it sits a demo handler and a `bb bench` tool built specifically to answer one question: how much does a Lambda invocation actually cost in wall-clock time, cold versus warm, at different memory tiers, on your own AWS account.
+`lambda-mvp-bb` runs [Babashka](https://babashka.org) on AWS Lambda as a custom runtime, via [blambda](https://github.com/jmglov/blambda) (which wraps [bb-lambda](https://github.com/tatut/bb-lambda)'s Runtime API loop). Unlike this family's other custom-runtime siblings, nothing here is compiled ahead of time: the handler namespace is `require`d and interpreted at cold start by Babashka's own SCI interpreter. It adds a demo handler and a `bb bench` tool built to answer one question: how much does a Lambda invocation actually cost in wall-clock time, cold versus warm, at different memory tiers, on your own AWS account.
 
-Every AWS-touching command in this repo relies entirely on the caller's own `aws` CLI configuration (`AWS_PROFILE`/`AWS_REGION`, or `aws configure`). Nothing here hardcodes a profile, an account, or a region: clone it, point it at your account, and the same commands that produced this project's own measured numbers will produce yours.
+Every AWS-touching command in this repo relies on the caller's own `aws` CLI configuration (`AWS_PROFILE`/`AWS_REGION`, or `aws configure`). Nothing here hardcodes a profile, an account, or a region: clone it, point it at your account, and the same commands that produced this project's own measured numbers will produce yours.
 
 ## How to read this guide
 
@@ -12,7 +12,7 @@ Every AWS-touching command in this repo relies entirely on the caller's own `aws
 
 **Want to understand or reproduce the cold/warm boot-time story?** [Cold vs. warm boot](cold-warm-boot.md) is the reason this project exists: what `bb bench` measures, how to read the table it prints, and this project's own measured numbers.
 
-**Want the full 5-way comparison across every sibling?** [Five-way comparison](five-way-comparison.md) pulls every sibling's own recorded numbers into one place, with the caveats each one's own docs already carry.
+**Want the full 5-way comparison across every sibling?** [Five-way comparison](five-way-comparison.md) collects every sibling's recorded numbers in one place, with the caveats their own docs carry.
 
 **Want to contribute a change?** [Contributing](contributing.md) covers the build, the test commands, and this project's conventions.
 

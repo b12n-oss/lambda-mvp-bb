@@ -47,8 +47,7 @@ family's numbers read as a progression.
 | Warm Duration (median) | 1.7 ms | 1.7 ms | 2.2 ms | 1.3 ms | 1.9 ms |
 | Max Memory Used | 104 MB | 83 MB | 164 MB | 26 MB | 168 MB |
 
-**Sources, exactly as recorded in each project's own doc — this page
-doesn't re-derive anything:**
+Sources, as recorded in each project's own doc (nothing is re-derived here):
 
 - `bb`: `lambda-mvp-bb/docs/guide/cold-warm-boot.md`, "This project's
   own baseline" table, `ap-southeast-2`, arm64, `provided.al2023`,
@@ -65,7 +64,7 @@ doesn't re-derive anything:**
 - `jnk`: `lambda-mvp-jnk/docs/guide/cold-warm-boot.md`, "A real
   measured run", `ap-southeast-2`, x86_64, 2026-09-12.
 - `rst`: `lambda-mvp-rst/docs/guide/cold-warm-boot.md`, "This repo's
-  own baseline" (the corrected, re-run table — an earlier table in the
+  own baseline" (the corrected, re-run table; an earlier table in the
   same doc was retracted as mislabeled and is not cited here), jolt
   v0.8.7, arm64, `ap-southeast-2`, 2026-09-12.
 
@@ -103,7 +102,7 @@ the other three by construction, not by merit.
 
 ### What moved since the first round
 
-**The three non-Jolt siblings barely moved**, which is the useful part. bb's
+**The three non-Jolt siblings barely moved.** bb's
 Cold Init came within 5% at both tiers, 4.4% at 2048 MB and 0.6% at 3008 MB,
 and its Max Memory within 2 MB.
 cljs moved about 6% at 2048 MB and 3% at 3008 MB. jnk reproduced its own
@@ -195,42 +194,40 @@ guides.
 
 ## Caveats, carried forward from each project's own docs rather than re-derived
 
-- **jnk's numbers aren't directly comparable to the four zip-based
-  siblings'.** `lambda-mvp-jnk` deploys as a **container image**, not a
-  zip — its own `docs/guide/cold-warm-boot.md` says plainly that
-  container-image cold start and zip-based cold start aren't the same
-  measurement, and that the surprising "3008 MB colder than 2048 MB"
-  result in its own table is attributed to ECR image-layer caching
-  order, not memory size.
+- **jnk's numbers aren't directly comparable to the zip-based
+  siblings'.** `lambda-mvp-jnk` deploys as a container image, not a
+  zip. Its own `docs/guide/cold-warm-boot.md` says container-image and
+  zip-based cold starts aren't the same measurement, and attributes the
+  surprising "3008 MB colder than 2048 MB" result in its table to ECR
+  image-layer caching order, not memory size.
 - **rst's upstream dependency has landed.** `lambda-mvp-rst`'s Rust
   JSON-builder capability (`jolt-diplomat`'s builder API) was developed
   on a public fork branch (`burinc/jolt-diplomat`,
   `feat/json-builder-api`) and vendored in via `bb vendor`. That branch
-  was **merged into `jolt-lang/jolt-diplomat` on 2026-09-14**, so the
-  "pending upstream PR" caveat this bullet used to carry no longer
-  applies. `lambda-mvp-rst` still vendors its snapshot rather than
-  pinning a git ref, which is now a cleanup its own README tracks.
+  was merged into `jolt-lang/jolt-diplomat` on 2026-09-14, so no
+  upstream PR is pending. `lambda-mvp-rst` still vendors its snapshot
+  rather than pinning a git ref, a cleanup its own README tracks.
 - **bb is the only sibling with a Lambda Layer in its cold-start
-  path, and its own Cold Duration numbers stand out.** Cold Init
+  path, and its Cold Duration stands out.** Cold Init
   Duration (mounting the layer, starting `bb`, interpreting
-  `bootstrap.clj`) lands in the middle of the pack — 368-381 ms,
+  `bootstrap.clj`) lands mid-pack at 368-381 ms,
   between cljs's ~105-109 ms and jnk's 2048 MB figure of 510 ms. But
-  **Cold Duration** (the handler's own execution time) is
-  consistently the highest of the five at both tiers — 7.0-7.7 ms,
+  Cold Duration (the handler's own execution time) is
+  the highest of the five at both tiers: 7.0-7.7 ms,
   versus 1.5-4.4 ms for every other sibling. bb is the only one of
   the five whose handler is interpreted (via Babashka's SCI) rather
-  than AOT-compiled or JIT-warmed ahead of the first request, which
-  is a plausible explanation, though this single run isn't enough to
-  separate that from measurement noise or the layer-mount overhead
-  bleeding into the handler's own timing. See
+  than AOT-compiled or JIT-warmed before the first request. That is
+  a plausible explanation, though this single run can't separate it
+  from measurement noise or layer-mount overhead
+  bleeding into the handler's timing. See
   [Building the runtime layer](runtime-layer-build.md) for the
   mechanism.
 - **None of these numbers are a live guarantee.** Every source doc says
-  the same thing: a single run each, on one account, one region, one
+  the same: a single run each, on one account, one region, one
   day. The spread between projects (down to ~1.3 ms warm, cold init
-  anywhere from ~65 ms to ~510 ms) is itself the point — not a precise
+  from ~65 ms to ~510 ms) is the point, not a precise
   number to target. Run each project's own `bench` task against your
-  own account for numbers you can trust.
+  own account.
 
 ## See also
 

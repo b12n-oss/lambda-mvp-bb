@@ -1,6 +1,6 @@
 # Architecture
 
-This page is the whole-system view: how blambda's Runtime API loop, the two-artifact build, and the two babashka-driven tools (AWS lifecycle, bench) fit together. Each piece has its own deep-dive page linked from here; this page is the map, not the territory.
+This page is the whole-system view: how blambda's Runtime API loop, the two-artifact build, and the two babashka-driven tools (AWS lifecycle, bench) fit together. Each piece has its own deep-dive page linked from here.
 
 ## The whole flow
 
@@ -25,13 +25,13 @@ flowchart LR
 
 ## blambda's Runtime API loop
 
-`bootstrap` (a POSIX shell script) is what AWS Lambda actually execs as the container entrypoint. It resolves `$LAYERS_DIR` (`/opt` in production — where Lambda mounts layers), builds a classpath from the function's own code directory plus anything staged by a deps layer, then execs the Babashka static binary (`bb`) against `bootstrap.clj`, the actual Runtime API poll/execute/respond loop. `bootstrap.clj` resolves `_HANDLER` (`net.b12n.lambda-mvp.handler/handler`) into a namespace + function via `require`/`resolve`, then loops: `GET /invocation/next`, decode the JSON body into a keyword-keyed map, call the handler with that event plus the raw response-headers map as context, JSON-encode whatever the handler returns, `POST /invocation/{id}/response`.
+`bootstrap` (a POSIX shell script) is what AWS Lambda actually execs as the container entrypoint. It resolves `$LAYERS_DIR` (`/opt` in production, where Lambda mounts layers), builds a classpath from the function's own code directory plus anything staged by a deps layer, then execs the Babashka static binary (`bb`) against `bootstrap.clj`, the actual Runtime API poll/execute/respond loop. `bootstrap.clj` resolves `_HANDLER` (`net.b12n.lambda-mvp.handler/handler`) into a namespace + function via `require`/`resolve`, then loops: `GET /invocation/next`, decode the JSON body into a keyword-keyed map, call the handler with that event plus the raw response-headers map as context, JSON-encode whatever the handler returns, `POST /invocation/{id}/response`.
 
-Both `bootstrap` and `bootstrap.clj` ship as-is from blambda (`~/dev/b12n-oss/blambda/resources/`) — this project doesn't fork or patch either. See [Building the runtime layer](runtime-layer-build.md) for why that constrains the packaging shape.
+Both `bootstrap` and `bootstrap.clj` ship as-is from blambda (`~/dev/b12n-oss/blambda/resources/`). This project doesn't fork or patch either. See [Building the runtime layer](runtime-layer-build.md) for why that constrains the packaging shape.
 
 ## The build
 
-`bb build` wraps two of blambda's own CLI subcommands: `build-runtime-layer` (downloads the Babashka static binary for the target arch, bundles it with `bootstrap`/`bootstrap.clj`) and `build-lambda` (zips this project's `src/net/b12n/lambda_mvp/handler.clj`, preserving its nested path). Neither compiles anything — Babashka interprets the handler namespace at cold start via SCI, the same interpreter that runs `bb` scripts generally.
+`bb build` wraps two of blambda's own CLI subcommands: `build-runtime-layer` (downloads the Babashka static binary for the target arch, bundles it with `bootstrap`/`bootstrap.clj`) and `build-lambda` (zips this project's `src/net/b12n/lambda_mvp/handler.clj`, preserving its nested path). Neither compiles anything: Babashka interprets the handler namespace at cold start via SCI, the same interpreter that runs `bb` scripts generally.
 
 See [Building the runtime layer](runtime-layer-build.md) for the full two-artifact story and the real measured artifact sizes.
 
@@ -39,7 +39,7 @@ See [Building the runtime layer](runtime-layer-build.md) for the full two-artifa
 
 `script/aws_lifecycle.clj` is a small, generic (no hardcoded profile, account, or region) idempotent create-or-update-or-delete tool, driven entirely by whatever the caller's own `aws` CLI already has configured. `deploy!` publishes a new runtime-layer version, then creates the IAM role and Lambda function on first run (attaching that layer version) and updates them on every later run. `invoke!` runs a single ad-hoc invocation. `teardown!` deletes the function, every published layer version, and the role. `bb deploy`/`bb invoke`/`bb teardown` are thin wrappers around it.
 
-`deploy!` reads `LAMBDA_ARCH` directly (default `arm64`) rather than detecting it from a compiled binary's ELF header the way the Jolt-based siblings' lifecycle scripts do — blambda's build takes architecture as an explicit input in the first place, so there's nothing to detect post-hoc.
+`deploy!` reads `LAMBDA_ARCH` directly (default `arm64`) rather than detecting it from a compiled binary's ELF header the way the Jolt-based siblings' lifecycle scripts do, because blambda's build takes architecture as an explicit input and there's nothing to detect afterward.
 
 ## `bb demo`: the same flow, one command
 

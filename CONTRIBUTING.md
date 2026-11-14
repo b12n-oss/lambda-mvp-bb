@@ -12,13 +12,13 @@ commit that touches `src/`, `script/`, or `tools/`.
 
 ## Conventions
 
-- No hardcoded AWS profile, account, or region anywhere — every task
+- No hardcoded AWS profile, account, or region anywhere: every task
   reads whatever the caller's own `aws` CLI already resolves.
 - No CDK/SAM/Terraform/CloudFormation. Deploys are plain `aws` CLI
   calls wrapped in babashka scripts.
 - Handler response shape (`message`/`runtime`/`request_id`/
   `warm_invocation`/`event`) matches the other four `lambda-mvp-*`
-  siblings exactly — keep it that way if you touch `handler.clj`.
+  siblings exactly, so keep it that way if you touch `handler.clj`.
 - Stage files by explicit path in every commit; never `git add -A`/`.`/`-u`.
 
 ## Docs site
@@ -33,7 +33,7 @@ these tasks are for local preview only.
 
 ## Pull requests
 
-- Keep the demo handler minimal — anything that grows it risks
+- Keep the demo handler minimal. Anything that grows it risks
   confounding the cold-start story this project exists to measure.
 - If a change affects `docs/guide/cold-warm-boot.md`'s methodology or
   `docs/guide/five-way-comparison.md`'s numbers, update both in the

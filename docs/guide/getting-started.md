@@ -14,7 +14,7 @@
 | **AWS CLI v2** | Every AWS-touching task shells out to it | `brew install awscli` |
 | **An AWS account** | To deploy, invoke, and benchmark against | Credentials set up via `AWS_PROFILE`/`AWS_REGION` env vars or `aws configure`. Nothing in this repo hardcodes a profile, account, or region. |
 
-No Docker, unlike the Jolt/jank-based siblings — blambda's build downloads a prebuilt static binary directly, no container build step. (LocalStack was tried as a no-AWS-account alternative for the deploy/invoke/teardown lifecycle and doesn't currently work for this project's layered artifact — see the design spec's "Local dev without a real AWS account" section if you're tempted to try it yourself before reading why.)
+No Docker, unlike the Jolt/jank-based siblings: blambda's build downloads a prebuilt static binary directly, with no container build step. LocalStack was tried as a no-AWS-account alternative for the deploy/invoke/teardown lifecycle and doesn't currently work for this project's layered artifact. The design spec's "Local dev without a real AWS account" section explains why.
 
 ## Clone and probe
 

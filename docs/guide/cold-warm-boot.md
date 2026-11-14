@@ -8,7 +8,7 @@ Every Lambda invocation ends with a `REPORT` line in CloudWatch:
 REPORT RequestId: ... Duration: 4.60 ms Billed Duration: 5 ms Memory Size: 512 MB Max Memory Used: 237 MB [Init Duration: 322.20 ms]
 ```
 
-- **Init Duration** (cold invokes only): time to start the execution environment — mount the runtime layer, exec `bootstrap`, start the `bb` binary, interpret `bootstrap.clj`, `require` the handler namespace — before the handler's first request is served.
+- **Init Duration** (cold invokes only): time to start the execution environment (mount the runtime layer, exec `bootstrap`, start the `bb` binary, interpret `bootstrap.clj`, `require` the handler namespace) before the handler's first request is served.
 - **Duration**: the handler's own execution time (the Runtime API loop's `next-invocation` → `handler` → `send-response!` round trip). Present on every invocation, cold or warm.
 - **Billed Duration**: what you're actually charged for. For a custom runtime this *includes* Init Duration on a cold invoke.
 
@@ -31,7 +31,7 @@ bb bench
 bb teardown   # when you're done -- nothing should keep running in your account
 ```
 
-Two things worth knowing before you run it. `bb bench` leaves the function configured at its last tier's memory size (3008 MB by default): a later `bb deploy` resets it back to 2048 MB, but if you only ever run `bb bench` you're left on the higher-cost tier until you set it back yourself. And `bb deploy`/`bb bench`/`bb teardown` all act on whatever function/role name is configured (`LAMBDA_MVP_FUNCTION_NAME`, default `lambda-mvp-bb`) — the runtime layer name stays fixed regardless — so don't point it at an existing unrelated resource.
+Two things to know before you run it. `bb bench` leaves the function at its last tier's memory size (3008 MB by default). A later `bb deploy` resets it to 2048 MB, but if you only run `bb bench` you stay on the higher-cost tier until you set it back yourself. And `bb deploy`/`bb bench`/`bb teardown` all act on whatever function/role name is configured (`LAMBDA_MVP_FUNCTION_NAME`, default `lambda-mvp-bb`; the runtime layer name stays fixed), so don't point it at an existing unrelated resource.
 
 If a "cold" sample shows no Init Duration, `bb bench` prints a warning rather than silently reporting incomplete data.
 
@@ -46,15 +46,15 @@ Measured against a real deployment (`ap-southeast-2`, arm64, `provided.al2023`, 
 | Warm Duration (min/median/max) | 1.7 / 1.8 / 1.8 ms | 1.7 / 1.7 / 1.9 ms |
 | Max Memory Used | 102 MB | 104 MB |
 
-As with every sibling's own recorded table: **illustrative, not a live guarantee** — a single run, on one account, one region, one day. Your numbers will differ by account, region, and the hardware allocation AWS happens to give you. Run `bb bench` for your own.
+As with every sibling's recorded table, these are illustrative, not a live guarantee: a single run, on one account, one region, one day. Your numbers will differ by account, region, and the hardware AWS happens to give you. Run `bb bench` for your own.
 
 ### A second run, 2026-09-19
 
-The table above stays as recorded. This one is a fresh `bb bench` against the
+The table above stays as recorded. This is a fresh `bb bench` against the
 same account and region six days later, taken while the `lambda-mvp-*` family
-was re-measured together after jolt shipped v0.8.9. Nothing about this project
-changed between the two runs, so the gap between them is a useful read on how
-much of any sibling's movement is just AWS:
+was re-measured together after jolt shipped v0.8.9. Nothing in this project
+changed between the runs, so the gap shows how much of any sibling's movement
+is just AWS:
 
 | Metric | 2048 MB | 3008 MB |
 |---|---|---|
@@ -65,10 +65,10 @@ much of any sibling's movement is just AWS:
 
 Cold Init landed within 5% of the 2026-09-13 figures at both tiers (4.4% at
 2048 MB, 0.6% at 3008 MB) and
-Max Memory Used within 2 MB, which is the reassuring outcome. Cold Duration
+Max Memory Used within 2 MB. Cold Duration
 sat slightly higher, 8.1-8.2 ms against 7.0-7.7 ms, still the highest of the
 five siblings and still consistent with the interpreted-handler explanation
-the [five-way comparison](five-way-comparison.md) gives.
+in the [five-way comparison](five-way-comparison.md).
 
 ## See also
 
