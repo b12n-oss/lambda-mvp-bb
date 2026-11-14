@@ -141,9 +141,10 @@ the Jolt pair's is.
 
 lambda-mvp-cljrfc and lambda-mvp-glj were built on 2026-11-14 and benched the
 same day, in the same account and region (`ap-southeast-2`), next to fresh runs
-of cljs and jlt. bb, jnk and rst weren't re-run, so their latest numbers are
-still the second round's. Every figure below is the median of three `bench`
-runs, all within about an hour of each other.
+of cljs and jlt. bb, jnk and rst were re-run about an hour later, and
+[all seven on one day](#all-seven-on-one-day-2026-11-14) has the full table.
+Every figure below is the median of three `bench` runs, all within about an
+hour of each other.
 
 ### At 2048 MB
 
@@ -191,6 +192,65 @@ account in `ap-southeast-2` on 2026-11-14. Ranges and per-run tables are in
 [glj's](https://github.com/b12n-oss/lambda-mvp-glj/blob/main/docs/guide/cold-warm-boot.md)
 and [jlt's](https://github.com/b12n-oss/lambda-mvp-jlt/blob/main/docs/guide/cold-warm-boot.md)
 guides.
+
+## All seven on one day, 2026-11-14
+
+bb, jnk and rst were benched about an hour after the third round, in the same
+account and region, so every sibling now has numbers from the same day. Each
+figure is the median of three `bench` runs. rst ran its own pinned default, Jolt
+0.8.9, and jlt ran 0.8.27 on jolt's patched Chez.
+
+### At 2048 MB
+
+| Metric | glj | jnk | cljs | cljrfc | bb | rst | jlt |
+|---|---|---|---|---|---|---|---|
+| Cold Init Duration | 102.1 ms | 138.9 ms* | 134.7 ms | 184.4 ms | 373.9 ms | 449.1 ms | 477.1 ms |
+| Cold Duration | 3.6 ms | 1.5 ms* | 4.9 ms | 3.4 ms | 8.0 ms | 2.2 ms | 2.2 ms |
+| Warm Duration (median) | 1.2 ms | 1.3 ms | 1.8 ms | 1.8 ms | 1.9 ms | 1.9 ms | 2.0 ms |
+| Max Memory Used | 28 MB | 40 MB | 77 MB | 81 MB | 99 MB | 182 MB | 128 MB |
+
+\* jnk's first 2048 MB run gave a "cold" sample with no Init Duration, so the
+environment wasn't fresh and `bench` flagged it. These two figures are the mean
+of the other two runs (120.5 and 157.2 ms of Init).
+
+### At 3008 MB
+
+| Metric | glj | jnk | cljs | cljrfc | bb | rst | jlt |
+|---|---|---|---|---|---|---|---|
+| Cold Init Duration | 103.0 ms | 149.2 ms | 135.3 ms | 149.5 ms | 467.6 ms | 449.2 ms | 349.3 ms |
+| Cold Duration | 3.8 ms | 1.6 ms | 5.0 ms | 3.8 ms | 9.1 ms | 2.2 ms | 1.9 ms |
+| Warm Duration (median) | 1.2 ms | 1.4 ms | 1.9 ms | 1.6 ms | 1.9 ms | 1.9 ms | 1.7 ms |
+| Max Memory Used | 28 MB | 40 MB | 77 MB | 82 MB | 97 MB | 182 MB | 128 MB |
+
+### The first invoke after a deploy
+
+The `bench` tables measure cold starts after the function has run once. The
+invoke straight after `deploy` is colder still for jnk, because Lambda pulls its
+container image from ECR for the first time:
+
+| | glj | cljs | cljrfc | jlt | bb | rst | jnk |
+|---|---|---|---|---|---|---|---|
+| Init Duration, first invoke at 2048 MB | 103.5 ms | 133.5 ms | 151.5 ms | 382.2 ms | 450.8 ms | 450.4 ms | 1063.6 ms |
+
+### What the full table shows
+
+glj had the lowest Cold Init and the least memory at both tiers, and its warm
+calls were the quickest too, by 0.1 to 0.2 ms over jnk. jnk's
+handler ran fastest once started, at about 1.5 ms on a cold call, and its Cold
+Init after the image was cached (120 to 197 ms) sat level with the two Node
+siblings. Its very first invoke paid over a second for the image pull, which
+none of the zip-based siblings do.
+
+jnk used 40 MB, against 26 MB in both earlier rounds. Its Dockerfile installs
+jank unpinned from the PPA, still labelled `0.1-noble`, so the package it got
+today may differ from September's. At 2048 MB, bb and rst came within 6% of
+their second-round Cold Init medians (373.9 against 397.6 ms, 449.1 against
+470.7 ms). At 3008 MB both landed about a quarter higher (467.6 against 370.8 ms,
+449.2 against 365.0 ms), and cljs ran 20 to 30 ms higher at both tiers, so
+compare columns within this table rather than against earlier rounds.
+
+bb's handler stayed the slowest on a cold call, 7.7 to 9.8 ms across all six
+samples, which matches the earlier rounds.
 
 ## Caveats, carried forward from each project's own docs rather than re-derived
 
